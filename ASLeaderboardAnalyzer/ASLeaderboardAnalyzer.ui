@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ASLeaderboardAnalyzer</class>
+ <widget class="QMainWindow" name="ASLeaderboardAnalyzer">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>200</width>
+    <height>113</height>
+   </rect>
+  </property>
+  <property name="font">
+   <font>
+    <family>Tahoma</family>
+   </font>
+  </property>
+  <property name="windowTitle">
+   <string>Leaderboard Analyzer</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>Images/LeaderboardAnalyzer.png</normaloff>Images/LeaderboardAnalyzer.png</iconset>
+  </property>
+  <widget class="QWidget" name="layout_Main">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <property name="spacing">
+     <number>5</number>
+    </property>
+    <property name="leftMargin">
+     <number>5</number>
+    </property>
+    <property name="topMargin">
+     <number>5</number>
+    </property>
+    <property name="rightMargin">
+     <number>5</number>
+    </property>
+    <property name="bottomMargin">
+     <number>5</number>
+    </property>
+    <item>
+     <widget class="ASLeaderboardSearcher" name="widget_Searcher" native="true"/>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="layout_Control">
+      <property name="spacing">
+       <number>5</number>
+      </property>
+      <item>
+       <widget class="ASLeaderboardSelector" name="widget_Selector" native="true"/>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_WidgetsCount">
+        <property name="text">
+         <string>Widgets count:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSpinBox" name="spinBox_WidgetsCount">
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>6</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton_ComparingSettings">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="res.qrc">
+          <normaloff>:/Data/Images/DoubleArrowRight.png</normaloff>:/Data/Images/DoubleArrowRight.png</iconset>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="Line" name="line_2">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="GuiController" name="widget_GuiController" native="true"/>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>200</width>
+     <height>20</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="action_About">
+   <property name="text">
+    <string>About</string>
+   </property>
+  </action>
+  <action name="action_Documetation">
+   <property name="text">
+    <string>Documetation</string>
+   </property>
+  </action>
+  <action name="action_Settings">
+   <property name="text">
+    <string>Settings</string>
+   </property>
+  </action>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ASLeaderboardSelector</class>
+   <extends>QWidget</extends>
+   <header>ASLeaderboardSelector.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ASLeaderboardSearcher</class>
+   <extends>QWidget</extends>
+   <header>ASLeaderboardSearcher.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>GuiController</class>
+   <extends>QWidget</extends>
+   <header>ASPlayerStatsController.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="res.qrc"/>
+ </resources>
+ <connections/>
+</ui>

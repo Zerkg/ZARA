@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/Icon">
+        <file>Question.png</file>
+        <file>LeaderboardAnalyzer.png</file>
+        <file>ASScoreAnalyzer.png</file>
+    </qresource>
+</RCC>

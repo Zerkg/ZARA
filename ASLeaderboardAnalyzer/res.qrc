@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/Data">
+        <file>Images/loading.gif</file>
+        <file>Images/DoubleArrowRight.png</file>
+        <file>Images/DoubleArrowLeft.png</file>
+    </qresource>
+</RCC>
