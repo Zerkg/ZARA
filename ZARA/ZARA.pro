@@ -12,8 +12,7 @@ HEADERS += \
     ZARAMainWindow.h
 
 INCLUDEPATH += \
-    "..\ASLeaderboardAnalyzer" \
-    "..\ASScoreAnalyzer"
+    "..\ASLeaderboardAnalyzer"
 
 RESOURCES += \
     res.qrc
@@ -26,20 +25,16 @@ win32: RC_ICONS = $$PWD/Icon/icon.ico
 #====================:: Configuration settings for ::====================
 #====================:: release and debug version  ::====================
 
-SUFFIX = ".dll"
+SUFFIX = ""
 
 CONFIG(debug, debug|release) {
     message("debug mode")
-    SUFFIX = "_d.dll"
+    SUFFIX = "_d"
 }else {
     message("release mode")
-    DLLDESTDIR = ../.dll
 }
 
 LIBS += \
-    -L../.dll/ -ASLeaderboardAnalyzer$${SUFFIX} \
-    ../.dll/ASLeaderboardAnalyzer$${SUFFIX} \
-    -L../.dll/ -ASScoreAnalyzer$${SUFFIX} \
-    ../.dll/ASScoreAnalyzer$${SUFFIX}
+    -L../.dll/ -lASLeaderboardAnalyzer$${SUFFIX}
 
 QMAKE_CXXFLAGS_RELEASE += -O3

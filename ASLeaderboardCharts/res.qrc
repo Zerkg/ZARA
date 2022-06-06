@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/General">
+        <file>Images/Charts.png</file>
+    </qresource>
+</RCC>

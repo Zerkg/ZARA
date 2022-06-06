@@ -2,12 +2,13 @@
 
 #include <QApplication>
 #include <QSettings>
+#include <QStyleFactory>
 
 int main(int argc, char *argv[])
 {  
     QApplication a(argc, argv);
-
-    QSettings::setPath(QSettings::IniFormat, QSettings::SystemScope, "configs/cfg.ini");
+    QSettings applicationSettings("Data/Config.ini", QSettings::IniFormat, &a);
+    a.setStyle(QStyleFactory::create("Fusion"));
 
     ASLeaderboardSearcher w;
     w.show();

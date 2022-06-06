@@ -1,29 +1,26 @@
 #ifndef ASTYPES_H
 #define ASTYPES_H
 
-#include "ASFunctions_global.h"
 #include <array>
 
 namespace as
 {
-enum Mode
+enum Mode      : signed char
 {
     CASUAL,
     PRO   ,
     ELITE
 };
-enum Character
+enum Character : signed char
 {
     DV      ,
     ERASER  ,
     POINTMAN,
     PUSHER  ,
     VEGAS   ,
-    MONO    ,
-
-    TOTAL_COUNT
+    MONO
 };
-enum Color
+enum Color     : signed char
 {
     PINK  ,
     BLUE  ,
@@ -32,10 +29,40 @@ enum Color
     RED   ,
     WHITE
 };
+enum Stat      : signed char
+{
+    NICKNAME             ,
+    SCORE                ,
+    DURATION             ,
+    AFTERRIDE_BONUSES    ,
 
-constexpr std::array<Color    , 6> colors_array    ({ PINK  , BLUE  , GREEN   , YELLOW, RED  , WHITE });
-constexpr std::array<Mode     , 3> modes_array     ({ CASUAL, PRO   , ELITE                          });
-constexpr std::array<Character, 6> characters_array({ DV    , ERASER, POINTMAN, PUSHER, VEGAS, MONO  });
+    CHARACTER            ,
+
+    OVERFILLS            ,
+    LONGEST_CHAIN        ,
+    DROPPED_CHAIN        ,
+    BEST_CLUSTER         ,
+    AVG_CLUSTER_SIZE     ,
+    AVG_CLUSTER_COLORS   ,
+    CONS_BLOCKS_DODGED   ,
+    CONS_BLOCKS_COLLECTED,
+    SKILL_RATING         ,
+    BLOCKS_STATS         ,
+    POWERUPS_STATS
+};
+enum Powerup   : signed char
+{
+    STORM     ,
+    PAINT     ,
+    MULTIPLIER,
+    SORT
+};
+
+inline constexpr std::array modes_array       { CASUAL, PRO   , ELITE                            };
+inline constexpr std::array powerups_array    { STORM , PAINT , MULTIPLIER, SORT                 };
+inline constexpr std::array characters_array  { DV    , ERASER, POINTMAN  , PUSHER, VEGAS, MONO  };
+inline constexpr std::array colors_array      { PINK  , BLUE  , GREEN     , YELLOW, RED  , WHITE };
+inline constexpr std::array modes_colors_array{ 0xd7f7b5, 0xffcfbd, 0xbdd8ea };
 
 }
 

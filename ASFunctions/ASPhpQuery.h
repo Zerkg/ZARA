@@ -2,18 +2,28 @@
 #define ASPHPQUERY_H
 
 #include "ASFunctions_global.h"
-#include "ASAfterrideBonus.h"
-
 #include "ASTypes.h"
-#include "ASLeaderboard.h"
 
 #include <QObject>
-#include <QTime>
 
-#include <memory>
+#include <deque>
+#include <set>
+
+struct PlayerStats;
 
 class QNetworkAccessManager;
-class ASLeaderboard;
+
+struct ASFUNCTIONS_EXPORT SongTitle
+{
+    QString artistName;
+    QString songName;
+};
+struct ASFUNCTIONS_EXPORT SearchData
+{
+    int songID;
+    QString name;
+};
+
 
 class ASFUNCTIONS_EXPORT ASPhpQuery : public QObject
 {
@@ -29,7 +39,7 @@ public:
 
 protected:
 
-    virtual void parse() noexcept {}
+    virtual void parse() noexcept = 0;
     virtual bool errorCheck() noexcept;
 
     QNetworkAccessManager *m_ASWebsiteConnection;
@@ -50,6 +60,7 @@ signals:
     void dataProcessed();
 
 };
+
 
 class ASFUNCTIONS_EXPORT ASPhpStatsQuery : public ASPhpQuery
 {
@@ -93,20 +104,17 @@ class ASFUNCTIONS_EXPORT ASPhpLeaderboardQuery : public ASPhpQuery
 {
 public:
 
-    struct Header
-    {
-        QString artistName;
-        QString songName;
-    };
+    using LeaderboardData = std::deque<PlayerStats>;
 
     ASPhpLeaderboardQuery(int leaderboardID = -1, QObject *parent = nullptr) noexcept;
 
     void reset() noexcept;
     void setLeaderboardID(int id) noexcept;
 
-    const ASLeaderboard* getLeaderboard(as::Mode mode) const noexcept;
+    const LeaderboardData* leaderboard(as::Mode mode) const;
+    std::set<as::Mode> availableLeaderboards() const;
 
-    Header getHeader() const noexcept;
+    SongTitle getSongTitle() const noexcept;
 
 protected:
 
@@ -114,25 +122,28 @@ protected:
 
 private:
 
-    Header m_Header;
-    std::array<ASLeaderboard, 3> m_Leaderboards;
+    SongTitle m_SongTitle;
+    std::map<as::Mode, LeaderboardData> m_Leaderboards;
 
 };
 
-struct ASFUNCTIONS_EXPORT SearchData
-{
-    int songID;
-    QString name;
-};
 
 class ASFUNCTIONS_EXPORT ASPhpGetSongsQuery : public ASPhpQuery
 {
 public:
 
+    using Data = std::vector<SearchData>;
+
     ASPhpGetSongsQuery(QObject *parent = nullptr) noexcept;
 
-    std::vector<SearchData> getSearchResult() noexcept;
+    const Data* searchResults() const noexcept;
+
     void setSearchingTarget(const QString& name) noexcept;
+
+    SearchData searchResult(size_t index           ) const noexcept;
+    SearchData searchResult(const QString& itemName) const noexcept;
+
+    virtual SongTitle songTitle(int index) = 0;
 
 protected:
 
@@ -140,7 +151,7 @@ protected:
 
 protected:
 
-    std::vector<SearchData> m_Songs;
+    std::vector<SearchData> m_SearchResults;
 
 };
 
@@ -149,6 +160,8 @@ class ASFUNCTIONS_EXPORT ASPhpSongsQuery : public ASPhpGetSongsQuery
 public:
 
     ASPhpSongsQuery(const QString &artistName = QString(), QObject *parent = nullptr) noexcept;
+
+    virtual SongTitle songTitle(int index) override;
 
 protected:
 
@@ -160,6 +173,8 @@ class ASFUNCTIONS_EXPORT ASPhpArtistsQuery : public ASPhpGetSongsQuery
 public:
 
     ASPhpArtistsQuery(const QString &songName = QString(), QObject *parent = nullptr) noexcept;
+
+    virtual SongTitle songTitle(int index) override;
 
 protected:
 

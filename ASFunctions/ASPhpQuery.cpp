@@ -4,24 +4,22 @@
 #include <QNetworkReply>
 
 #include "ASFunctions.h"
-#include "ASCharacter.h"
 #include "ASAfterrideBonus.h"
 
-using namespace as;
-
+#include "PlayerStats.h"
 
 //========================================================:: ASPhpQuery ::==========================================================
 
 ASPhpQuery::ASPhpQuery(const QString &query, QObject *parent) noexcept
     : QObject(parent)
     , m_ASWebsiteConnection(new QNetworkAccessManager(this))
-    , m_QueryString(query)
-    , m_IsFinished(false) {}
+    , m_QueryString(query){}
 
 
 void ASPhpQuery::execute() noexcept
 {
-    m_IsFinished = false;
+    m_IsSuccessfull = false;
+    m_IsFinished    = false;
 
     QNetworkRequest request(m_QueryString);
     QObject::connect(m_ASWebsiteConnection->get(request), &QNetworkReply::finished, this, &ASPhpQuery::updateData);
@@ -29,7 +27,8 @@ void ASPhpQuery::execute() noexcept
 
 void ASPhpQuery::waitForFinished() const noexcept
 {
-    while (!m_IsFinished) QCoreApplication::processEvents();
+    while (!m_IsFinished)
+        QCoreApplication::processEvents();
 }
 
 bool ASPhpQuery::isSuccessfull() const noexcept
@@ -52,16 +51,11 @@ void ASPhpQuery::updateData() noexcept
         m_PreparedReply = QString(m_RawReplyData).split('\n');
 
         if (errorCheck())
-        {
             parse();
-            m_IsSuccessfull = true;
-        }
-        else m_IsSuccessfull = false;
 
         m_IsFinished = true;
         emit dataProcessed();
     }
-    else m_IsSuccessfull = false;
 
     reply->deleteLater();
 }
@@ -97,10 +91,12 @@ ASPhpBaseStatsQuery::ASPhpBaseStatsQuery(PlayerStats *output, const QString &rid
         setRideID(rid);
 }
 void ASPhpBaseStatsQuery::parse() noexcept
-{
+{      
+    m_Output->validationFlags[PlayerStats::BASE] = PlayerStats::PROCESSING;
+
     m_Output->bonuses.reset();
 
-    QString duration(QString::number(as::intFromString(m_PreparedReply[5])));
+    QString duration(QString::number(as::parseInt(m_PreparedReply[5], ":")));
     duration.insert(duration.size() - 2, ':');
 
     m_Output->trackDuration = QTime::fromString(duration, duration.size() == 5 ? "mm:ss" : "m:ss");
@@ -109,22 +105,25 @@ void ASPhpBaseStatsQuery::parse() noexcept
     {
         switch(m_PreparedReply[i][m_PreparedReply[i].size() - 9].toLatin1())
         {
-        case 'd': m_Output->bonuses.setBonus(ASAfterrideBonus::IRONMODE    ); continue;
+        case 'd': m_Output->bonuses.setBonus(as::IRONMODE    ); continue;
 
-        case 's': m_Output->bonuses.setBonus(ASAfterrideBonus::CLEAN_FINISH); continue;
+        case 's': m_Output->bonuses.setBonus(as::CLEAN_FINISH); continue;
 
-        case 'h': m_Output->bonuses.setBonus(ASAfterrideBonus::MATCH_7     ); continue;
-        case '1': m_Output->bonuses.setBonus(ASAfterrideBonus::MATCH_11    ); continue;
-        case '2': m_Output->bonuses.setBonus(ASAfterrideBonus::MATCH_21    ); continue;
+        case 'h': m_Output->bonuses.setBonus(as::MATCH_7     ); continue;
+        case '1': m_Output->bonuses.setBonus(as::MATCH_11    ); continue;
+        case '2': m_Output->bonuses.setBonus(as::MATCH_21    ); continue;
 
-        case 't': m_Output->bonuses.setBonus(ASAfterrideBonus::STEALTH     ); continue;
+        case 't': m_Output->bonuses.setBonus(as::STEALTH     ); continue;
 
-        case 'e': m_Output->bonuses.setBonus(ASAfterrideBonus::SEEING_RED  ); continue;
-        case 'j': m_Output->bonuses.setBonus(ASAfterrideBonus::BUTTER_NINJA); continue;
+        case 'e': m_Output->bonuses.setBonus(as::SEEING_RED  ); continue;
+        case 'j': m_Output->bonuses.setBonus(as::BUTTER_NINJA); continue;
 
         default: continue;
         }
     }
+
+    m_Output->validationFlags[PlayerStats::BASE] = PlayerStats::VALID;
+    m_IsSuccessfull = true;
 }
 
 
@@ -141,37 +140,45 @@ ASPhpExtStatsQuery::ASPhpExtStatsQuery(PlayerStats *output, const QString &rid, 
         setRideID(rid);
 }
 void ASPhpExtStatsQuery::parse() noexcept
-{
-    m_Output->skillRaiting = as::intFromString(m_PreparedReply[13]);
-    if (m_Output->skillRaiting.value() == 0)                      //Not "too old" score check (too old scores have no extended stats)
+{    
+    // Too old scores check; Too old scores have no extended stats (https://www.audio-surf.com/ext/song_getExtendedScoreDetail.php?rid=23721.930.2837793)
+    if (!m_PreparedReply[13].contains(QRegExp("[0-9]")))
     {
-        m_Output->skillRaiting = std::nullopt;
+        m_Output->validationFlags[PlayerStats::EXT] = PlayerStats::INVALID;
         return;
     }
-    m_Output->character->setAbilityStats(as::intFromString(m_PreparedReply[3]), as::intFromString(m_PreparedReply[4]));
 
-    m_Output->overfillsCount                = as::intFromString   (m_PreparedReply[5 ]);
-    m_Output->longestChainTime              = as::intFromString   (m_PreparedReply[6 ]);
-    m_Output->droppedChains                 = as::intFromString   (m_PreparedReply[7 ]);
-    m_Output->bestCluster                   = as::intFromString   (m_PreparedReply[8 ]);
-    m_Output->avgClusterSize                = as::doubleFromString(m_PreparedReply[9 ]);
-    m_Output->avgColorsCount                = as::doubleFromString(m_PreparedReply[10]);
-    m_Output->maxConsecutiveBlocksDodged    = as::intFromString   (m_PreparedReply[11]);
-    m_Output->maxConsecutiveBlocksCollected = as::intFromString   (m_PreparedReply[12]);
+    m_Output->validationFlags[PlayerStats::EXT] = PlayerStats::PROCESSING;
+
+    m_Output->skillRating = as::parseInt(m_PreparedReply[13]);
+
+    m_Output->characterData.stats[0] = as::parseInt   (m_PreparedReply[3 ]);
+    m_Output->characterData.stats[1] = as::parseInt   (m_PreparedReply[4 ]);
+    m_Output->overfillsCount         = as::parseInt   (m_PreparedReply[5 ]);
+    m_Output->longestChainTime       = as::parseInt   (m_PreparedReply[6 ]);
+    m_Output->droppedChains          = as::parseInt   (m_PreparedReply[7 ]);
+    m_Output->bestCluster            = as::parseInt   (m_PreparedReply[8 ]);
+    m_Output->avgClusterSize         = as::parseDouble(m_PreparedReply[9 ]);
+    m_Output->avgColorsCount         = as::parseDouble(m_PreparedReply[10]);
+    m_Output->maxConsBlocksDodged    = as::parseInt   (m_PreparedReply[11]);
+    m_Output->maxConsBlocksCollected = as::parseInt   (m_PreparedReply[12]);
 
     if (m_PreparedReply.size() > 50)
     {
         int tableData[]{31, 40, 49};         //Table data are indexes of each block stat (collected n, derived % and collected %)
 
-        for (int row{}; row < 3; ++row)
-            for (int column{}; column < 6; ++column)
-                m_Output->blocksStats[row][column] = as::intFromString(m_PreparedReply[tableData[row] + column]);
+        for (auto color : as::colors_array)
+            for (int stat{}; stat < 3; ++stat)
+                m_Output->blocksStats[color][stat] = as::parseInt(m_PreparedReply[tableData[stat] + color]);
 
-        m_Output->paintsUsed      = as::intFromString(m_PreparedReply[60]);
-        m_Output->shtormsUsed     = as::intFromString(m_PreparedReply[61]);
-        m_Output->multipliersUsed = as::intFromString(m_PreparedReply[62]);
-        m_Output->sortsUsed       = as::intFromString(m_PreparedReply[63]);
+        m_Output->powerups[as::PAINT     ] = as::parseInt(m_PreparedReply[60]);
+        m_Output->powerups[as::STORM     ] = as::parseInt(m_PreparedReply[61]);
+        m_Output->powerups[as::MULTIPLIER] = as::parseInt(m_PreparedReply[62]);
+        m_Output->powerups[as::SORT      ] = as::parseInt(m_PreparedReply[63]);
     }
+
+    m_Output->validationFlags[PlayerStats::EXT] = PlayerStats::VALID;
+    m_IsSuccessfull = true;
 }
 
 
@@ -180,90 +187,115 @@ void ASPhpExtStatsQuery::parse() noexcept
 
 ASPhpLeaderboardQuery::ASPhpLeaderboardQuery(int leaderboardID, QObject *parent) noexcept
     : ASPhpQuery(QString(), parent)
-    , m_Leaderboards({ CASUAL, PRO, ELITE })
 {
     m_URLTemplate = "http://www.audio-surf.com/ext/song_getSong.php?sid=%1";
-    if (leaderboardID > 0) m_QueryString = m_URLTemplate.arg(leaderboardID);
+
+    if (leaderboardID > 0)
+        m_QueryString = m_URLTemplate.arg(leaderboardID);
 }
 
 
 void ASPhpLeaderboardQuery::reset() noexcept
 {
-    for (int i{}; i < 3; ++i)
-        m_Leaderboards[i].reset();
+    m_Leaderboards.clear();
 }
 
+SongTitle ASPhpLeaderboardQuery::getSongTitle() const noexcept
+{
+    return m_SongTitle;
+}
 
 void ASPhpLeaderboardQuery::setLeaderboardID(int id) noexcept
 {
     m_QueryString = m_URLTemplate.arg(id);
 }
 
-const ASLeaderboard *ASPhpLeaderboardQuery::getLeaderboard(as::Mode mode) const noexcept
+const ASPhpLeaderboardQuery::LeaderboardData* ASPhpLeaderboardQuery::leaderboard(as::Mode mode) const
 {
-    return &m_Leaderboards[mode];
+    auto iter(m_Leaderboards.find(mode));
+
+    if (iter != m_Leaderboards.cend())
+        return &iter->second;
+    else
+        return nullptr;
 }
 
-ASPhpLeaderboardQuery::Header ASPhpLeaderboardQuery::getHeader() const noexcept
+std::set<as::Mode> ASPhpLeaderboardQuery::availableLeaderboards() const
 {
-    return m_Header;
+    std::set<as::Mode> modes;
+    for (const auto &pair : m_Leaderboards)
+        modes.insert(modes.cend(), pair.first);
+
+    return modes;
 }
 
 void ASPhpLeaderboardQuery::parse() noexcept
 {
-    for (int leaderboardID{}, line{12}, pos{}; leaderboardID < 3; line += (12 + leaderboardID * 2), ++leaderboardID, pos = 0)
-    {
-        m_Leaderboards[leaderboardID].reset();
+    reset();
 
+    int line(12);
+    for (auto mode : as::modes_array)
+    {
         while (m_PreparedReply[++line].contains("id="))
         {
             PlayerStats pStats;
 
-            QStringRef characterName(&m_PreparedReply[line], m_PreparedReply[line].indexOf("t/") + 2, 2);
+            pStats.characterData.mode = mode;
 
-            if      (characterName == "mo" || characterName == "ni") pStats.character.reset(new Mono        (static_cast<as::Mode>(leaderboardID)));
-            else if (characterName == "po"                         ) pStats.character.reset(new Pointman    (static_cast<as::Mode>(leaderboardID)));
-            else if (characterName == "dv"                         ) pStats.character.reset(new DoubleVision(static_cast<as::Mode>(leaderboardID)));
-            else if (characterName == "er"                         ) pStats.character.reset(new Eraser      (static_cast<as::Mode>(leaderboardID)));
-            else if (characterName == "pu"                         ) pStats.character.reset(new Pusher      (static_cast<as::Mode>(leaderboardID)));
-            else if (characterName == "ve"                         ) pStats.character.reset(new Vegas       (                                    ));
+            QStringRef character(&m_PreparedReply[line], m_PreparedReply[line].indexOf("t/") + 2, 2);
+
+            switch (character[0].unicode())
+            {
+            case 'm':
+            case 'n': pStats.characterData.type = as::MONO  ; break;
+            case 'd': pStats.characterData.type = as::DV    ; break;
+            case 'e': pStats.characterData.type = as::ERASER; break;
+            case 'v': pStats.characterData.type = as::VEGAS ; break;
+            case 'p':
+                if (character[1] == 'o')
+                    pStats.characterData.type = as::POINTMAN;
+                else
+                    pStats.characterData.type = as::PUSHER;
+                break;
+            }
 
             pStats.rID       = m_PreparedReply[line++].section('"', 3, 3);
             pStats.nickname  = m_PreparedReply[line++].section('"', 3, 3);
-            pStats.score     = as::intFromString(m_PreparedReply[line++]);
+            pStats.score     = as::parseInt(m_PreparedReply[line++], ",");
 
-            m_Leaderboards[leaderboardID].emplaceStat(std::move(pStats));
+            m_Leaderboards[mode].emplace_back(std::move(pStats));
 
-            ASPhpBaseStatsQuery *base(new ASPhpBaseStatsQuery(&m_Leaderboards[leaderboardID][pos], pStats.rID, this));
-            ASPhpExtStatsQuery  *ext (new ASPhpExtStatsQuery (&m_Leaderboards[leaderboardID][pos], pStats.rID, this));
+            ASPhpQuery *base(new ASPhpBaseStatsQuery(&m_Leaderboards[mode].back(), m_Leaderboards[mode].back().rID, this));
+            ASPhpQuery *ext (new ASPhpExtStatsQuery (&m_Leaderboards[mode].back(), m_Leaderboards[mode].back().rID, this));
 
-            QObject::connect(base, &ASPhpQuery::dataProcessed, this, [=](){ m_Leaderboards[leaderboardID].setValid(pos, ASLeaderboard::BASE_STATS); base->deleteLater(); });
-            QObject::connect(ext , &ASPhpQuery::dataProcessed, this, [=](){ m_Leaderboards[leaderboardID].setValid(pos, ASLeaderboard::EXT_STATS ); ext ->deleteLater(); });
-
-            base->execute();
-            ext ->execute();
-
-            ++pos;
+            for (auto query : { base, ext })
+            {
+                QObject::connect(query, &ASPhpQuery::dataProcessed, query, &QObject::deleteLater);
+                query->execute();
+            }
         }
+
+        line += (12 + mode * 2);
     }
 
-    int start (1 + m_PreparedReply[1].indexOf(QRegExp(">[^<]"   )));
-    int end   (    m_PreparedReply[1].indexOf(QRegExp("[^>\\s]<")));
+    int start(1 + m_PreparedReply[1].indexOf(QRegExp(">[^<]"   )));
+    int end  (    m_PreparedReply[1].indexOf(QRegExp("[^>\\s]<")));
 
-    m_Header.songName   = as::fixName(QStringRef(&m_PreparedReply[1], start, end - start + 1).toString());
-    m_Header.artistName = as::fixName(m_PreparedReply[1].section('\'', 1, 1));
+    m_SongTitle.songName   = as::fixName(QStringRef(&m_PreparedReply[1], start, end - start + 1).toString());
+    m_SongTitle.artistName = as::fixName(m_PreparedReply[1].section('\'', 1, 1));
+
+    m_IsSuccessfull = true;
 }
 
 
 
 //=====================================================:: ASPhpGetSongsQuery ::======================================================
 
-ASPhpGetSongsQuery::ASPhpGetSongsQuery(QObject *parent) noexcept
-    : ASPhpQuery(QString(), parent){}
+ASPhpGetSongsQuery::ASPhpGetSongsQuery(QObject *parent) noexcept : ASPhpQuery(QString(), parent) {}
 
-std::vector<SearchData> ASPhpGetSongsQuery::getSearchResult() noexcept
+const ASPhpGetSongsQuery::Data* ASPhpGetSongsQuery::searchResults() const noexcept
 {
-    return m_Songs;
+    return &m_SearchResults;
 }
 
 void ASPhpGetSongsQuery::setSearchingTarget(const QString &name) noexcept
@@ -271,6 +303,20 @@ void ASPhpGetSongsQuery::setSearchingTarget(const QString &name) noexcept
     QUrl sT(m_URLTemplate.arg(name));
     m_QueryString = sT.toEncoded();
 }
+
+SearchData ASPhpGetSongsQuery::searchResult(size_t index) const noexcept
+{
+    return m_SearchResults[index];
+}
+SearchData ASPhpGetSongsQuery::searchResult(const QString &itemName) const noexcept
+{
+    for (const auto &result : m_SearchResults)
+        if (result.name == itemName)
+            return result;
+
+    return {};
+}
+
 bool ASPhpGetSongsQuery::errorCheck() noexcept
 {
     if (m_PreparedReply.size())
@@ -292,11 +338,24 @@ ASPhpSongsQuery::ASPhpSongsQuery(const QString &artistName, QObject *parent) noe
     : ASPhpGetSongsQuery(parent)
 {
     m_URLTemplate = "http://www.audio-surf.com/ext/song_search.php?a=%1";
-    if (!artistName.isEmpty()) m_QueryString = m_URLTemplate.arg(artistName);
+    if (!artistName.isEmpty())
+        setSearchingTarget(artistName);
+}
+
+SongTitle ASPhpSongsQuery::songTitle(int index)
+{
+    SongTitle title;
+
+    title.songName   = m_SearchResults[index].name;
+    QUrl artist(m_QueryString.rightRef(m_QueryString.size() - m_QueryString.indexOf('=') - 1).toString());
+
+    title.artistName = as::fixName(artist.toString());
+
+    return title;
 }
 void ASPhpSongsQuery::parse() noexcept
 {
-    m_Songs.clear();
+    m_SearchResults.clear();
 
     for (int i{2}; i < m_PreparedReply.size(); i += 3)
     {
@@ -306,11 +365,12 @@ void ASPhpSongsQuery::parse() noexcept
         int start (2 + m_PreparedReply[i].indexOf("b>"));
         int end   (    m_PreparedReply[i].indexOf("</"));
 
-        if (start == end) sData.name = "#" + QString::number(sData.songID) + "_UNNAMED!";
+        if (start == end) sData.name = "{ #" + QString::number(sData.songID) + "_UNNAMED! }";
         else              sData.name = as::fixName(QStringRef(&m_PreparedReply[i], start, end - start).toString());
 
-        m_Songs.emplace_back(std::move(sData));
+        m_SearchResults.emplace_back(std::move(sData));
     }
+    m_IsSuccessfull = true;
 }
 
 
@@ -321,11 +381,23 @@ ASPhpArtistsQuery::ASPhpArtistsQuery(const QString &songName, QObject *parent) n
     : ASPhpGetSongsQuery(parent)
 {
     m_URLTemplate = "http://www.audio-surf.com/ext/song_search.php?q=%1";
-    if (!songName.isEmpty()) m_QueryString = m_URLTemplate.arg(songName);
+    if (!songName.isEmpty())
+        setSearchingTarget(songName);
+}
+
+SongTitle ASPhpArtistsQuery::songTitle(int index)
+{
+    SongTitle title;
+
+    title.artistName = m_SearchResults[index].name;
+    QUrl song(m_QueryString.rightRef(m_QueryString.size() - m_QueryString.indexOf('=') - 1).toString());
+    title.songName   = as::fixName(song.toString());
+
+    return title;
 }
 void ASPhpArtistsQuery::parse() noexcept
 {
-    m_Songs.clear();
+    m_SearchResults.clear();
 
     int line(2);
     while (!m_PreparedReply[line].contains('#'))
@@ -336,7 +408,27 @@ void ASPhpArtistsQuery::parse() noexcept
         int   songID(m_PreparedReply[line].section(QRegExp("\"."), 1, 1).toInt());
         QString name(m_PreparedReply[line].section('\''          , 1, 1)        );
 
+        if (name.isEmpty())
+            name = "{ #" + QString::number(songID) + "_UNNAMED! }";
 
-        m_Songs.emplace_back(SearchData({songID, as::fixName(name)}));
+        m_SearchResults.push_back({songID, as::fixName(name)});
     }
+    m_IsSuccessfull = true;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

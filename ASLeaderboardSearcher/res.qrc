@@ -1,5 +1,9 @@
 <RCC>
     <qresource prefix="/icons">
         <file>icons/history.png</file>
+        <file>icons/loupe.png</file>
+        <file>icons/Add.png</file>
+        <file>icons/Remove.png</file>
+        <file>icons/Filter.png</file>
     </qresource>
 </RCC>

@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/Images">
+        <file>Home32.png</file>
+        <file>ArrowLeft32.png</file>
+        <file>ArrowRight32.png</file>
+        <file>Refresh.png</file>
+    </qresource>
+</RCC>

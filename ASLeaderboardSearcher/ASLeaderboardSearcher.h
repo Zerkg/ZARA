@@ -5,7 +5,8 @@
 
 #include <QWidget>
 
-class SearchHistoryWidget;
+struct SearchRecord;
+class HistoryModel;
 
 namespace Ui {
 class ASLeaderboardSearcher;
@@ -20,20 +21,20 @@ public:
     explicit ASLeaderboardSearcher(QWidget *parent = nullptr);
     ~ASLeaderboardSearcher();
 
-private:
+protected:
 
-    Ui::ASLeaderboardSearcher *ui;
-    QVector<int> m_SongsIDs;
-    SearchHistoryWidget *m_History;
-    int m_LeaderboardId;
+    virtual void timerEvent(QTimerEvent *event) override;
+
+private:
 
     void init();
 
+    Ui::ASLeaderboardSearcher *ui;
+    HistoryModel *m_HistoryModel;
+
 private slots:
 
-    void search();
-    void displaySearchResults();
-    void saveInHistory(int leaderboardID);
+    void saveSearchResult(const SearchRecord &hr);
 
 signals:
 

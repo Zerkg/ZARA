@@ -1,28 +1,24 @@
-QT       += core network
-TEMPLATE = lib
+QT      += core network
+TEMPLATE = lib                   #Comment this line and uncomment #22 to build project as independent component
 
-DEFINES += ASFUNCTIONS_LIBARARY
-DEFINES += QT_DEPRECATED_WARNINGS
+DEFINES += \
+    ASFUNCTIONS_LIBARARY   \
+    QT_DEPRECATED_WARNINGS
 
 CONFIG += c++17
 
 SOURCES += \
     ASAfterrideBonus.cpp \
-    ASCharacter.cpp \
-    ASFunctions.cpp \
-    ASLeaderboard.cpp \
-    ASPhpQuery.cpp \
-    TableModel.cpp
+    ASFunctions.cpp      \
+    ASPhpQuery.cpp
 
 HEADERS += \
-    ASAfterrideBonus.h \
-    ASCharacter.h \
-    ASFunctions.h \
+    ASAfterrideBonus.h   \
+    ASFunctions.h        \
     ASFunctions_global.h \
-    ASLeaderboard.h \
-    ASPhpQuery.h \
+    ASPhpQuery.h         \
     ASTypes.h \
-    TableModel.h
+    PlayerStats.h
 
 RESOURCES += res.qrc
 

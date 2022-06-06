@@ -1,6 +1,6 @@
 QT += gui widgets
 
-TEMPLATE = lib                      #Comment this line and uncomment #16 line to build the project as independed componet
+TEMPLATE = lib                      #Comment this line and uncomment #26 to build the project as independed componet
 DEFINES += \
     ASLEADERBOARDSEARCHER_LIBRARY \
     QT_DEPRECATED_WARNINGS
@@ -8,41 +8,100 @@ DEFINES += \
 CONFIG += c++17
 
 INCLUDEPATH += \
-    "..\ASFunctions"
+    ..\ASFunctions
+
+RESOURCES += \
+    res.qrc
+
+
+# ==================================
+# =========:: Main files ::=========
+# ==================================
+HEADERS += \
+    ASLeaderboardSearcher.h        \
+    ASLeaderboardSearcher_global.h \
+    DataTypes.h \
 
 SOURCES += \
-    ASLeaderboardSearcher.cpp \
-    SearchHistoryWidget.cpp \
+    ASLeaderboardSearcher.cpp      \
 #    main.cpp
 
+FORMS += \
+    ASLeaderboardSearcher.ui
+
+
+# ===================================
+# ======:: Common components ::======
+# ===================================
+
+PREFIX = Components/
 HEADERS += \
-    ASLeaderboardSearcher.h \
-    ASLeaderboardSearcher_global.h \
-    SearchHistoryWidget.h
+    $${PREFIX}SearchResultsBox.h \
+    $${PREFIX}DisplayFilter.h    \
+    $${PREFIX}FilterEditor.h     \
+    $${PREFIX}FilterSettings.h   \
+
+SOURCES += \
+    $${PREFIX}SearchResultsBox.cpp \
+    $${PREFIX}FilterSettings.cpp   \
+    $${PREFIX}DisplayFilter.cpp    \
+    $${PREFIX}FilterEditor.cpp     \
+
 
 FORMS += \
-    ASLeaderboardSearcher.ui \
-    SearchHistoryWidget.ui
+    $${PREFIX}SearchResultsBox.ui \
+    $${PREFIX}FilterSettings.ui   \
+    $${PREFIX}FilterEditor.ui     \
 
-RESOURCES += res.qrc
+
+# ===================================
+# ==========:: Searchers ::==========
+# ===================================
+
+PREFIX = Searchers/
+HEADERS += \
+    $${PREFIX}StandardSearcher.h \
+
+SOURCES += \
+    $${PREFIX}StandardSearcher.cpp \
+
+FORMS += \
+    $${PREFIX}StandardSearcher.ui \
+
+
+# ===================================
+# ===========:: History ::===========
+# ===================================
+
+PREFIX = History/
+HEADERS += \
+    $${PREFIX}HistoryModel.h     \
+    $${PREFIX}HistoryView.h      \
+    $${PREFIX}HistoryCompleter.h \
+
+SOURCES += \
+    $${PREFIX}HistoryModel.cpp     \
+    $${PREFIX}HistoryView.cpp      \
+    $${PREFIX}HistoryCompleter.cpp \
+
+FORMS += \
+    $${PREFIX}HistoryView.ui
+
 
 #====================:: Configuration settings for ::====================
 #====================:: release and debug version  ::====================
 
-SUFFIX = ".dll"
+SUFFIX = ""
 
 CONFIG(debug, debug|release) {
-    message("debug mode")
-    TARGET = ASLeaderboardSearcher_d
-    SUFFIX = "_d.dll"
+    message("Debug mode")
+    SUFFIX = "_d"
 }else {
-    message("release mode")
-    TARGET = ASLeaderboardSearcher
+    message("Release mode")
 }
 
-LIBS += \
-    -L../.dll/ -ASFunctions$${SUFFIX} \
-    ../.dll/ASFunctions$${SUFFIX}
+TARGET = ASLeaderboardSearcher$${SUFFIX}
+LIBS += -L../.dll/ -lASFunctions$${SUFFIX}
 
 DLLDESTDIR = ../.dll
 

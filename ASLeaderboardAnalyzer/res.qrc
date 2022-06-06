@@ -4,4 +4,10 @@
         <file>Images/DoubleArrowRight.png</file>
         <file>Images/DoubleArrowLeft.png</file>
     </qresource>
+    <qresource prefix="/Powerups">
+        <file>Multiplier24.png</file>
+        <file>Paint24.png</file>
+        <file>Sort24.png</file>
+        <file>Storm24.png</file>
+    </qresource>
 </RCC>

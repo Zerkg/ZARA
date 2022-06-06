@@ -15,7 +15,6 @@ Q_OBJECT
 public:
 
     ZARAMainWindow(QWidget *parent = nullptr);
-    ~ZARAMainWindow();
 
 private:
 
