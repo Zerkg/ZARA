@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>icons/history.png</file>
+    </qresource>
+</RCC>

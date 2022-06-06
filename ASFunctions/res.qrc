@@ -1,0 +1,18 @@
+<RCC>
+    <qresource prefix="/Characters">
+        <file>Images/Characters/DV.png</file>
+        <file>Images/Characters/DVE.png</file>
+        <file>Images/Characters/DVP.png</file>
+        <file>Images/Characters/Eraser.png</file>
+        <file>Images/Characters/Eraser Elite.png</file>
+        <file>Images/Characters/Mono.png</file>
+        <file>Images/Characters/Mono Pro.png</file>
+        <file>Images/Characters/Mono Ninja.png</file>
+        <file>Images/Characters/Pointman.png</file>
+        <file>Images/Characters/Pointman Elite.png</file>
+        <file>Images/Characters/Pointman Pro.png</file>
+        <file>Images/Characters/Pusher Elite.png</file>
+        <file>Images/Characters/Pusher.png</file>
+        <file>Images/Characters/Vegas.png</file>
+    </qresource>
+</RCC>
