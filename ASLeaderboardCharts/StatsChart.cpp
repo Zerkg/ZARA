@@ -8,6 +8,11 @@
 
 #include "TracerToolTip.h"
 
+
+#include <QDebug>
+
+
+
 StatsChart::StatsChart(QWidget *parent) : QWidget(parent){ init(); }
 
 void StatsChart::setSource(const ASPhpLeaderboardQuery *source)
@@ -146,6 +151,9 @@ bool StatsChart::eventFilter(QObject* obj, QEvent *event)
 
 void StatsChart::updateChart()
 {
+    for (const auto trace : qAsConst(m_Tracers))
+        trace->setVisible(false);
+
     for (auto mode : as::modes_array)
     {
         const auto leaderboard(m_Source->leaderboard(mode));
@@ -162,6 +170,9 @@ void StatsChart::updateChart()
 
         std::transform(leaderboard->cbegin(), leaderboard->cend(), playerScore.begin(), [](const auto &stats){ return stats.score; });
         std::iota     (playerPos    .begin(), playerPos    .end(), 1.0);
+
+        for (int i{}; i < leaderboard->size(); ++i)
+            m_Tracers[i + (mode * 10)]->setVisible(true);
 
         ui->widget_StatsChart->graph(mode)->setData(playerPos, playerScore, true);
     }
